@@ -59,6 +59,12 @@ echo "built: $APP ($(lipo -archs "$APP/Contents/MacOS/SleepGuard"), signed by: $
 
 if [ "${1:-}" = "--install" ]; then
   DEST="/Applications/SleepGuard.app"
+  # 標準ユーザーのMacでは /Applications に書けないのでホーム側に逃がす
+  if [ ! -w /Applications ]; then
+    mkdir -p "$HOME/Applications"
+    DEST="$HOME/Applications/SleepGuard.app"
+    echo "note: /Applications に書けないので $DEST に入れます"
+  fi
   osascript -e 'quit app "SleepGuard"' >/dev/null 2>&1 || true
   pkill -x SleepGuard >/dev/null 2>&1 || true
   sleep 1

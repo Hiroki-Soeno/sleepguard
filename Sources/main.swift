@@ -136,10 +136,20 @@ enum Toggler {
         return Result(code: p.terminationStatus, stderr: String(data: data, encoding: .utf8) ?? "")
     }
 
-    static let sudoersPath = "/etc/sudoers.d/sleepguard"
+    /// sudoers の許可は **ユーザーごと** なので、ファイル名にもユーザー名を入れる。
+    /// （共用Macで別アカウントが「設定済み」と誤認するのを防ぐ）
+    static var currentUser: String { NSUserName() }
 
-    /// ⚠️ `sudo -n -l <cmd>` は使えない：管理者ユーザーは元々そのコマンドを「実行してよい」ので、
-    /// NOPASSWD が無くても、直前にターミナルで sudo を叩いてタイムスタンプが生きていれば 0 を返す。
+    static var sudoersPath: String {
+        // sudoers.d は '.' を含むファイル名を読み飛ばすのでスクリプト側と同じ正規化をする
+        let safe = String(currentUser.map { ch in
+            ch.isLetter && ch.isASCII || ch.isNumber && ch.isASCII || ch == "_" || ch == "-" ? ch : "_"
+        })
+        return "/etc/sudoers.d/sleepguard-\(safe)"
+    }
+
+    /// ⚠️ `sudo -n -l <cmd>` は使えない：`man sudoers` の listpw 既定値は any ＝ NOPASSWD 行が
+    /// 1つでもあれば `sudo -l` 自体がパスワード無しで通るので、別用途の行があると誤判定する。
     /// ここは設定ファイルの有無だけを見て、実際に効くかは切り替え時の `sudo -n` の結果で判断する。
     static var sudoersInstalled: Bool {
         FileManager.default.fileExists(atPath: sudoersPath)
@@ -309,7 +319,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// 初回起動時だけ、パスワード不要化をこちらから提案する
     private func offerSetupOnFirstRun() {
         guard ProcessInfo.processInfo.environment["SLEEPGUARD_FAKE"] == nil else { return }
-        let key = "SetupOfferedV1"
+        let key = "SetupOfferedV2"   // ユーザー別sudoersへの移行で1度だけ再提案する
         guard !UserDefaults.standard.bool(forKey: key) else { return }
         if sudoersReady {
             UserDefaults.standard.set(true, forKey: key)
@@ -348,7 +358,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let a = NSAlert()
         a.messageText = "パスワード入力を不要にします"
         a.informativeText = """
-        /etc/sudoers.d/sleepguard に、次の2つのコマンドだけをパスワードなしで許可する設定を書き込みます。
+        \(Toggler.currentUser) に対して、次の2つのコマンドだけをパスワードなしで許可する設定を書き込みます。
 
           pmset -a disablesleep 1
           pmset -a disablesleep 0
@@ -361,7 +371,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard frontmost({ a.runModal() }) == .alertFirstButtonReturn else { return }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let apple = "do shell script \"/bin/bash \" & quoted form of \"\(script)\" with administrator privileges"
+            let apple = "do shell script \"/bin/bash \" & quoted form of \"\(script)\" & \" \" & quoted form of \"\(Toggler.currentUser)\" with administrator privileges"
             let result = Toggler.run("/usr/bin/osascript", ["-e", apple])
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -404,7 +414,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard frontmost({ a.runModal() }) == .alertFirstButtonReturn else { return }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            let apple = "do shell script \"/bin/bash \" & quoted form of \"\(script)\" with administrator privileges"
+            let apple = "do shell script \"/bin/bash \" & quoted form of \"\(script)\" & \" \" & quoted form of \"\(Toggler.currentUser)\" with administrator privileges"
             let result = Toggler.run("/usr/bin/osascript", ["-e", apple])
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
