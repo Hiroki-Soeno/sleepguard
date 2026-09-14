@@ -13,10 +13,10 @@
     --ink: #14151a;
     --muted: #5d6068;
     --line: #e2e2de;
-    --accent: #d97a06;
-    --code-bg: #f0efec;
+    --accent: #c76f05;
     --warn-bg: #fdf4e6;
     --warn-line: #e8c98d;
+    --step-bg: #f0efec;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -26,9 +26,9 @@
       --muted: #9a9ea8;
       --line: #2a2e37;
       --accent: #ff9f0a;
-      --code-bg: #21252d;
       --warn-bg: #2a2318;
       --warn-line: #5c4a24;
+      --step-bg: #21252d;
     }
   }
   * { box-sizing: border-box; }
@@ -36,62 +36,63 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    font: 16px/1.8 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
     padding-inline: 20px;
     padding-block: 0;
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding-block: 56px 80px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding-block: 56px 80px; }
 
-  header { display: flex; gap: 20px; align-items: center; margin-bottom: 12px; }
+  header { display: flex; gap: 20px; align-items: center; }
   header img { width: 88px; height: 88px; border-radius: 20px; flex: none; }
   h1 { font-size: 30px; line-height: 1.25; margin: 0 0 4px; letter-spacing: -.01em; }
   .tag { color: var(--muted); margin: 0; }
 
-  .lede { font-size: 17px; margin: 24px 0 32px; }
+  .lede { font-size: 17px; margin: 28px 0 32px; }
 
-  .dl { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .dl { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .btn {
     display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
-    font-weight: 600; padding: 12px 22px; border-radius: 10px;
+    font-weight: 600; font-size: 17px; padding: 14px 26px; border-radius: 10px;
   }
   .btn:hover { filter: brightness(1.08); }
   .meta { color: var(--muted); font-size: 14px; }
 
-  h2 { font-size: 20px; margin: 44px 0 10px; letter-spacing: -.01em; }
-  h3 { font-size: 16px; margin: 26px 0 6px; }
-  p { margin: 0 0 12px; }
+  h2 { font-size: 21px; margin: 48px 0 12px; letter-spacing: -.01em; }
+  p { margin: 0 0 14px; }
 
-  .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px 22px; margin: 16px 0;
+  table { border-collapse: collapse; width: 100%; margin: 18px 0 14px; }
+  th, td { text-align: left; padding: 14px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; padding-block: 6px; }
+  td.shot { width: 92px; }
+  td.shot img { width: 44px; height: 44px; display: block; border-radius: 10px; }
+  td .state { font-weight: 700; display: block; }
+  td .desc { color: var(--muted); font-size: 15px; }
+
+  ol.steps { list-style: none; counter-reset: s; margin: 18px 0; padding: 0; }
+  ol.steps > li {
+    counter-increment: s; position: relative; padding: 0 0 22px 46px; margin: 0;
   }
-  .card h3:first-child { margin-top: 0; }
-
-  pre {
-    background: var(--code-bg); border-radius: 8px; padding: 14px 16px; overflow-x: auto;
-    font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 10px 0;
+  ol.steps > li::before {
+    content: counter(s);
+    position: absolute; left: 0; top: 2px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--step-bg); color: var(--ink);
+    font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
   }
-  code { font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code-bg); padding: 2px 5px; border-radius: 4px; }
-  pre code { background: none; padding: 0; font-size: 13px; }
+  ol.steps > li:last-child { padding-bottom: 0; }
+  ol.steps b { font-weight: 700; }
 
-  ol, ul { margin: 0 0 12px; padding-left: 22px; }
-  li { margin-bottom: 6px; }
-
-  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 15px; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 13px; }
-  td:first-child { white-space: nowrap; }
-
-  .icon-cell { display: flex; align-items: center; gap: 10px; }
-  .swatch { font-size: 20px; line-height: 1; }
+  ul.plain { margin: 14px 0; padding-left: 22px; }
+  ul.plain li { margin-bottom: 8px; }
 
   .note {
     background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px;
-    padding: 14px 18px; margin: 16px 0; font-size: 15px;
+    padding: 16px 20px; margin: 18px 0;
   }
-  .note strong { font-weight: 700; }
+  .note p:last-child { margin-bottom: 0; }
 
-  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
   a { color: var(--accent); }
 
   @media (max-width: 480px) {
@@ -99,6 +100,8 @@
     header img { width: 64px; height: 64px; border-radius: 15px; }
     h1 { font-size: 24px; }
     .wrap { padding-block: 36px 60px; }
+    td.shot { width: 64px; }
+    td.shot img { width: 40px; height: 40px; }
   }
 </style>
 </head>
@@ -114,107 +117,91 @@
 </header>
 
 <p class="lede">
-  外付けディスプレイに繋いだまま蓋を閉じたい、ビルドやダウンロードを回したまま席を立ちたい——
-  そういうときに <code>pmset -a disablesleep</code> をターミナルで叩く代わりに、メニューバーのアイコンを押すだけで切り替えられます。
-  <strong>今どっちの状態なのかがアイコンで一目で分かります。</strong>
+  外付けディスプレイに繋いだまま蓋を閉じたい、ダウンロードや書き出しを回したまま席を立ちたい。
+  そんなときに、メニューバーのアイコンを押すだけで<strong>「蓋を閉じてもスリープしない」状態に切り替えられます</strong>。
+  今どちらの状態なのかは、アイコンを見れば一目で分かります。
 </p>
 
 <div class="dl">
-  <a class="btn" href="https://github.com/Hiroki-Soeno/sleepguard/releases/latest/download/SleepGuard-1.0.zip">SleepGuard 1.0 をダウンロード</a>
-  <span class="meta">macOS 13 以降 / Intel・Apple Silicon 両対応 / 約 320KB</span>
+  <a class="btn" href="https://github.com/Hiroki-Soeno/sleepguard/releases/latest/download/SleepGuard-1.0.zip">ダウンロード（無料）</a>
+  <span class="meta">バージョン 1.0 ・ macOS 13 以降 ・ 約 320KB</span>
 </div>
-<p class="meta">ソースコード: <a href="https://github.com/Hiroki-Soeno/sleepguard">github.com/Hiroki-Soeno/sleepguard</a></p>
 
 <h2>アイコンの見方</h2>
-<p>同じ月マークに、斜線が入っているかどうかだけで区別します。</p>
+<p>メニューバーの右側に、月のマークが出ます。<strong>斜線が入っていたら「寝ない状態」</strong>です。</p>
 <table>
-  <thead><tr><th>メニューバーの表示</th><th>状態</th></tr></thead>
+  <thead>
+    <tr><th>メニューバーの表示</th><th>状態</th></tr>
+  </thead>
   <tbody>
     <tr>
-      <td><span class="icon-cell"><span class="swatch">🌙</span> 月だけ（白黒）</span></td>
-      <td>通常。蓋を閉じるとスリープします</td>
+      <td class="shot"><img src="menubar-off.png" alt="斜線なしの白い月のアイコン"></td>
+      <td>
+        <span class="state">ふつう</span>
+        <span class="desc">蓋を閉じるとスリープします</span>
+      </td>
     </tr>
     <tr>
-      <td><span class="icon-cell"><span class="swatch">🌙</span> <strong style="color:var(--accent)">オレンジの月＋斜線</strong></span></td>
-      <td>スリープ無効中。蓋を閉じても起きたままです</td>
+      <td class="shot"><img src="menubar-on.png" alt="斜線が入ったオレンジの月のアイコン"></td>
+      <td>
+        <span class="state" style="color:var(--accent)">寝ない状態</span>
+        <span class="desc">蓋を閉じても起きたままです</span>
+      </td>
     </tr>
     <tr>
-      <td><span class="icon-cell"><span class="swatch">🌙</span> <strong style="color:#e5484d">赤の月＋斜線</strong></span></td>
-      <td>スリープ無効中 <strong>かつバッテリー駆動</strong>。電池が減り続けています</td>
+      <td class="shot"><img src="menubar-battery.png" alt="斜線が入った赤い月のアイコン"></td>
+      <td>
+        <span class="state" style="color:#e5484d">寝ない状態（電源に繋がっていません）</span>
+        <span class="desc">このまま蓋を閉じると電池が減り続けます</span>
+      </td>
     </tr>
   </tbody>
 </table>
 <p>
-  <strong>左クリック</strong>で切り替え、<strong>右クリック</strong>でメニュー（状態の確認・ログイン時に起動・終了）。
+  アイコンを<strong>クリックすると切り替わります</strong>。<strong>右クリック</strong>すると、状態の確認や「ログイン時に起動」の設定ができます。
 </p>
 
-<h2>インストール</h2>
-
-<div class="card">
-  <h3>A. ダウンロードして使う</h3>
-  <p>Appleの開発者署名を付けていないので、<strong>初回だけ macOS の警告を通す操作が要ります</strong>（2回目以降は普通に開きます）。</p>
-  <ol>
-    <li>上のボタンから zip をダウンロードして展開し、<code>SleepGuard.app</code> を <strong>「アプリケーション」フォルダ</strong>に入れる</li>
-    <li>ダブルクリックする → 「Appleが悪質なソフトウェアでないことを確認できません」と出てブロックされる。<strong>「完了」</strong>を押す</li>
-    <li><strong>システム設定 →「プライバシーとセキュリティ」</strong>を開き、一番下までスクロール →
-      「"SleepGuard" は…ブロックされました」の行にある <strong>「このまま開く」</strong> をクリック（管理者パスワードを聞かれます）</li>
-    <li>もう一度 <code>SleepGuard.app</code> をダブルクリック → 確認ダイアログで <strong>「開く」</strong></li>
-  </ol>
-  <p class="meta">
-    ※ 昔の「Control+クリック →『開く』」の抜け道は macOS 15 Sequoia で廃止されています。macOS 26 でも使えません。
-  </p>
-</div>
-
-<div class="card">
-  <h3>B. 自分でビルドする（警告が一切出ません）</h3>
-  <p>
-    macOS の警告は「ダウンロードしたファイル」に付く印（<code>com.apple.quarantine</code>）が原因なので、
-    手元でビルドしたものには <strong>そもそも警告が出ません</strong>。
-    Xcode Command Line Tools（<code>swiftc</code>）が入っていればこちらが早いです。
-  </p>
-  <pre><code>git clone https://github.com/Hiroki-Soeno/sleepguard.git
-cd sleepguard
-./build.sh --install</code></pre>
-  <p class="meta">ビルドして「アプリケーション」に入れ、そのまま起動するところまでやります。</p>
-</div>
-
-<h2>初回起動時にひとつだけ</h2>
+<h2>インストールのしかた</h2>
 <p>
-  スリープ設定の変更には管理者権限が要るため、放っておくと<strong>切り替えるたびに毎回パスワードを聞かれます</strong>。
-  初回起動時に「パスワード不要にしますか？」と聞いてくるので、<strong>1回だけ</strong>パスワードを入れてください。以降はクリックだけで切り替わります。
+  このアプリはAppleの審査を通していないため、<strong>最初の1回だけmacOSの警告を通す操作</strong>が必要です。2回目からは普通に開きます。
 </p>
-<p>
-  中身は <code>/etc/sudoers.d/sleepguard</code> に、<strong>次の2つのコマンドだけ</strong>をパスワードなしで許可する行を書いているだけです。
-  それ以外のコマンド（<code>sudo ls</code> など）は今までどおりパスワードを要求します。
-</p>
-<pre><code>pmset -a disablesleep 1
-pmset -a disablesleep 0</code></pre>
-<p>あとから取り消したいときは、リポジトリの <code>scripts/uninstall-sudoers.sh</code> を実行してください。</p>
-
-<h2>知っておいてほしいこと</h2>
-<div class="note">
-  <p><strong>電源に繋いでいなくてもスリープしなくなります。</strong>
-  バッテリー駆動のまま蓋を閉じると電池が減り続け、カバンの中で発熱します。
-  その状態ではアイコンが<strong style="color:#e5484d">赤</strong>になりますが、自動では元に戻しません。</p>
-  <p style="margin-bottom:0"><strong>この設定は再起動しても残ります。</strong>
-  アプリを終了しても設定自体は生きているので、戻すときはアイコンをもう一度クリックしてください。</p>
-</div>
-<p>
-  今の状態はターミナルからも確認できます。
-</p>
-<pre><code>ioreg -n IOPMrootDomain -r -d 1 | grep SleepDisabled</code></pre>
-
-<h2>アンインストール</h2>
-<ol>
-  <li>メニューバーのアイコンが<strong>斜線なしの状態</strong>になっていることを確認する（スリープ設定を元に戻す）</li>
-  <li>右クリック →「終了」</li>
-  <li><code>/Applications/SleepGuard.app</code> をゴミ箱へ</li>
-  <li>パスワード不要の設定も消すなら <code>sudo rm /etc/sudoers.d/sleepguard</code></li>
+<ol class="steps">
+  <li>上の<b>ダウンロード</b>ボタンを押して、ダウンロードされたファイルをダブルクリックで展開する</li>
+  <li>出てきた <b>SleepGuard</b> を、<b>「アプリケーション」フォルダ</b>にドラッグして入れる</li>
+  <li>「アプリケーション」フォルダの <b>SleepGuard</b> をダブルクリックする。
+    <br>→「Appleが悪質なソフトウェアでないことを確認できません」と出るので、<b>「完了」</b>を押す（まだ開きません）</li>
+  <li>画面左上のアップルマーク → <b>「システム設定」</b> → 左の一覧から <b>「プライバシーとセキュリティ」</b> を選び、
+    <b>一番下までスクロール</b>する。
+    <br>→「"SleepGuard" はブロックされました」と書かれた行の <b>「このまま開く」</b> を押す（パスワードを聞かれたら、ご自身のMacのパスワードを入れてください）</li>
+  <li>もう一度 <b>SleepGuard</b> をダブルクリックして、出てきた確認に <b>「開く」</b> と答える</li>
+  <li>「パスワードの入力を省略しますか？」と聞かれるので、<b>「続ける」</b>を押してパスワードを入れる。
+    <br>→ これで準備完了です。メニューバーに月のアイコンが出ます</li>
 </ol>
+<p class="meta">
+  ※ 最後のパスワードは、<strong>このアプリがスリープの設定を変えることだけ</strong>を許可するためのものです。省略しても使えますが、その場合は切り替えるたびに毎回パスワードを聞かれます。あとから取り消すこともできます（下記）。
+</p>
+
+<h2>使う前に知っておいてほしいこと</h2>
+<div class="note">
+  <p><strong>電源に繋いでいなくても、寝なくなります。</strong>
+  バッテリーのまま蓋を閉じると電池が減り続け、カバンの中でMacが熱くなります。
+  その状態のときはアイコンが<strong style="color:#e5484d">赤</strong>になるので、赤いときは蓋を閉じる前に戻してください。</p>
+  <p><strong>この設定は、Macを再起動しても残ります。</strong>
+  アプリを終了しても解除されません。戻すときは、アイコンをもう一度クリックして斜線のない状態にしてください。</p>
+</div>
+
+<h2>やめたくなったら</h2>
+<ul class="plain">
+  <li>メニューバーのアイコンを押して、<strong>斜線のない状態</strong>に戻す</li>
+  <li>アイコンを右クリック →「パスワード不要の設定を取り消す…」を選ぶ（設定していた場合）</li>
+  <li>アイコンを右クリック →「終了」</li>
+  <li>「アプリケーション」フォルダの <strong>SleepGuard</strong> をゴミ箱に入れる</li>
+</ul>
 
 <footer>
-  MIT License · <a href="https://github.com/Hiroki-Soeno/sleepguard">GitHub</a> ·
-  不具合や要望は <a href="https://github.com/Hiroki-Soeno/sleepguard/issues">Issues</a> へ
+  作った人: 添野紘生 ・ MIT License<br>
+  ソースコードと開発者向けの情報: <a href="https://github.com/Hiroki-Soeno/sleepguard">GitHub</a> ・
+  不具合や要望は <a href="https://github.com/Hiroki-Soeno/sleepguard/issues">こちら</a>
 </footer>
 
 </div>

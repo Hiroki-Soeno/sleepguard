@@ -23,6 +23,7 @@ lipo -create "$OBJ/SleepGuard-arm64" "$OBJ/SleepGuard-x86_64" -output "$APP/Cont
 rm -rf "$OBJ"
 
 cp scripts/install-sudoers.sh "$APP/Contents/Resources/install-sudoers.sh"
+cp scripts/uninstall-sudoers.sh "$APP/Contents/Resources/uninstall-sudoers.sh"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<PLIST

@@ -158,6 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var loginItem = NSMenuItem()
     private var labelItem = NSMenuItem()
     private var sudoersItem = NSMenuItem()
+    private var removeSudoersItem = NSMenuItem()
     private var disabled = false
     private var busy = false
     private var sudoersReady = false
@@ -203,6 +204,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         labelItem.title = "メニューバーに文字を出す"
         sudoersItem.target = self
         sudoersItem.action = #selector(installSudoers)
+        removeSudoersItem.target = self
+        removeSudoersItem.action = #selector(removeSudoers)
+        removeSudoersItem.title = "パスワード不要の設定を取り消す…"
 
         menu.addItem(headerItem)
         menu.addItem(warnItem)
@@ -212,6 +216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(loginItem)
         menu.addItem(labelItem)
         menu.addItem(sudoersItem)
+        menu.addItem(removeSudoersItem)
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
@@ -280,6 +285,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         sudoersItem.title = sudoersReady ? "パスワード不要：設定済み ✓" : "パスワード不要にする…"
         sudoersItem.isEnabled = !sudoersReady
+        removeSudoersItem.isHidden = !sudoersReady
     }
 
     // MARK: アクション
@@ -382,6 +388,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let result = body()
         if previous != .regular { NSApp.setActivationPolicy(previous) }
         return result
+    }
+
+    @objc private func removeSudoers() {
+        guard let script = Bundle.main.path(forResource: "uninstall-sudoers", ofType: "sh") else {
+            alert("スクリプトが見つかりません", "アプリを再ビルドしてください。")
+            return
+        }
+        let a = NSAlert()
+        a.messageText = "パスワード不要の設定を取り消します"
+        a.informativeText = "この後、切り替えるたびに管理者パスワードを聞かれるようになります。\nいま管理者パスワードを1回入力してください。"
+        a.addButton(withTitle: "取り消す")
+        a.addButton(withTitle: "やめる")
+        a.window.level = .floating
+        guard frontmost({ a.runModal() }) == .alertFirstButtonReturn else { return }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let apple = "do shell script \"/bin/bash \" & quoted form of \"\(script)\" with administrator privileges"
+            let result = Toggler.run("/usr/bin/osascript", ["-e", apple])
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.recheckSudoers()
+                self.render()
+                if self.sudoersReady && !result.userCanceled {
+                    self.alert("取り消せませんでした", "もう一度お試しください。")
+                }
+            }
+        }
     }
 
     private func alert(_ title: String, _ body: String) {
