@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SleepGuard — 蓋を閉じてもMacを寝かせない</title>
+<meta name="description" content="MacBookの蓋を閉じてもスリープさせない設定を、メニューバーから1クリックで切り替えるアプリ。">
+<link rel="icon" href="icon-180.png">
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card: #ffffff;
+    --ink: #14151a;
+    --muted: #5d6068;
+    --line: #e2e2de;
+    --accent: #d97a06;
+    --code-bg: #f0efec;
+    --warn-bg: #fdf4e6;
+    --warn-line: #e8c98d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111318;
+      --card: #191c22;
+      --ink: #e9eaee;
+      --muted: #9a9ea8;
+      --line: #2a2e37;
+      --accent: #ff9f0a;
+      --code-bg: #21252d;
+      --warn-bg: #2a2318;
+      --warn-line: #5c4a24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    padding-inline: 20px;
+    padding-block: 0;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding-block: 56px 80px; }
+
+  header { display: flex; gap: 20px; align-items: center; margin-bottom: 12px; }
+  header img { width: 88px; height: 88px; border-radius: 20px; flex: none; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 4px; letter-spacing: -.01em; }
+  .tag { color: var(--muted); margin: 0; }
+
+  .lede { font-size: 17px; margin: 24px 0 32px; }
+
+  .dl { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    font-weight: 600; padding: 12px 22px; border-radius: 10px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .meta { color: var(--muted); font-size: 14px; }
+
+  h2 { font-size: 20px; margin: 44px 0 10px; letter-spacing: -.01em; }
+  h3 { font-size: 16px; margin: 26px 0 6px; }
+  p { margin: 0 0 12px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; margin: 16px 0;
+  }
+  .card h3:first-child { margin-top: 0; }
+
+  pre {
+    background: var(--code-bg); border-radius: 8px; padding: 14px 16px; overflow-x: auto;
+    font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 10px 0;
+  }
+  code { font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code-bg); padding: 2px 5px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: 13px; }
+
+  ol, ul { margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td:first-child { white-space: nowrap; }
+
+  .icon-cell { display: flex; align-items: center; gap: 10px; }
+  .swatch { font-size: 20px; line-height: 1; }
+
+  .note {
+    background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px;
+    padding: 14px 18px; margin: 16px 0; font-size: 15px;
+  }
+  .note strong { font-weight: 700; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+
+  @media (max-width: 480px) {
+    header { gap: 14px; }
+    header img { width: 64px; height: 64px; border-radius: 15px; }
+    h1 { font-size: 24px; }
+    .wrap { padding-block: 36px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <img src="icon.png" alt="SleepGuard のアイコン">
+  <div>
+    <h1>SleepGuard</h1>
+    <p class="tag">蓋を閉じてもMacを寝かせない。メニューバーから1クリック。</p>
+  </div>
+</header>
+
+<p class="lede">
+  外付けディスプレイに繋いだまま蓋を閉じたい、ビルドやダウンロードを回したまま席を立ちたい——
+  そういうときに <code>pmset -a disablesleep</code> をターミナルで叩く代わりに、メニューバーのアイコンを押すだけで切り替えられます。
+  <strong>今どっちの状態なのかがアイコンで一目で分かります。</strong>
+</p>
+
+<div class="dl">
+  <a class="btn" href="https://github.com/Hiroki-Soeno/sleepguard/releases/latest/download/SleepGuard-1.0.zip">SleepGuard 1.0 をダウンロード</a>
+  <span class="meta">macOS 13 以降 / Intel・Apple Silicon 両対応 / 約 320KB</span>
+</div>
+<p class="meta">ソースコード: <a href="https://github.com/Hiroki-Soeno/sleepguard">github.com/Hiroki-Soeno/sleepguard</a></p>
+
+<h2>アイコンの見方</h2>
+<p>同じ月マークに、斜線が入っているかどうかだけで区別します。</p>
+<table>
+  <thead><tr><th>メニューバーの表示</th><th>状態</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="icon-cell"><span class="swatch">🌙</span> 月だけ（白黒）</span></td>
+      <td>通常。蓋を閉じるとスリープします</td>
+    </tr>
+    <tr>
+      <td><span class="icon-cell"><span class="swatch">🌙</span> <strong style="color:var(--accent)">オレンジの月＋斜線</strong></span></td>
+      <td>スリープ無効中。蓋を閉じても起きたままです</td>
+    </tr>
+    <tr>
+      <td><span class="icon-cell"><span class="swatch">🌙</span> <strong style="color:#e5484d">赤の月＋斜線</strong></span></td>
+      <td>スリープ無効中 <strong>かつバッテリー駆動</strong>。電池が減り続けています</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  <strong>左クリック</strong>で切り替え、<strong>右クリック</strong>でメニュー（状態の確認・ログイン時に起動・終了）。
+</p>
+
+<h2>インストール</h2>
+
+<div class="card">
+  <h3>A. ダウンロードして使う</h3>
+  <p>Appleの開発者署名を付けていないので、<strong>初回だけ macOS の警告を通す操作が要ります</strong>（2回目以降は普通に開きます）。</p>
+  <ol>
+    <li>上のボタンから zip をダウンロードして展開し、<code>SleepGuard.app</code> を <strong>「アプリケーション」フォルダ</strong>に入れる</li>
+    <li>ダブルクリックする → 「Appleが悪質なソフトウェアでないことを確認できません」と出てブロックされる。<strong>「完了」</strong>を押す</li>
+    <li><strong>システム設定 →「プライバシーとセキュリティ」</strong>を開き、一番下までスクロール →
+      「"SleepGuard" は…ブロックされました」の行にある <strong>「このまま開く」</strong> をクリック（管理者パスワードを聞かれます）</li>
+    <li>もう一度 <code>SleepGuard.app</code> をダブルクリック → 確認ダイアログで <strong>「開く」</strong></li>
+  </ol>
+  <p class="meta">
+    ※ 昔の「Control+クリック →『開く』」の抜け道は macOS 15 Sequoia で廃止されています。macOS 26 でも使えません。
+  </p>
+</div>
+
+<div class="card">
+  <h3>B. 自分でビルドする（警告が一切出ません）</h3>
+  <p>
+    macOS の警告は「ダウンロードしたファイル」に付く印（<code>com.apple.quarantine</code>）が原因なので、
+    手元でビルドしたものには <strong>そもそも警告が出ません</strong>。
+    Xcode Command Line Tools（<code>swiftc</code>）が入っていればこちらが早いです。
+  </p>
+  <pre><code>git clone https://github.com/Hiroki-Soeno/sleepguard.git
+cd sleepguard
+./build.sh --install</code></pre>
+  <p class="meta">ビルドして「アプリケーション」に入れ、そのまま起動するところまでやります。</p>
+</div>
+
+<h2>初回起動時にひとつだけ</h2>
+<p>
+  スリープ設定の変更には管理者権限が要るため、放っておくと<strong>切り替えるたびに毎回パスワードを聞かれます</strong>。
+  初回起動時に「パスワード不要にしますか？」と聞いてくるので、<strong>1回だけ</strong>パスワードを入れてください。以降はクリックだけで切り替わります。
+</p>
+<p>
+  中身は <code>/etc/sudoers.d/sleepguard</code> に、<strong>次の2つのコマンドだけ</strong>をパスワードなしで許可する行を書いているだけです。
+  それ以外のコマンド（<code>sudo ls</code> など）は今までどおりパスワードを要求します。
+</p>
+<pre><code>pmset -a disablesleep 1
+pmset -a disablesleep 0</code></pre>
+<p>あとから取り消したいときは、リポジトリの <code>scripts/uninstall-sudoers.sh</code> を実行してください。</p>
+
+<h2>知っておいてほしいこと</h2>
+<div class="note">
+  <p><strong>電源に繋いでいなくてもスリープしなくなります。</strong>
+  バッテリー駆動のまま蓋を閉じると電池が減り続け、カバンの中で発熱します。
+  その状態ではアイコンが<strong style="color:#e5484d">赤</strong>になりますが、自動では元に戻しません。</p>
+  <p style="margin-bottom:0"><strong>この設定は再起動しても残ります。</strong>
+  アプリを終了しても設定自体は生きているので、戻すときはアイコンをもう一度クリックしてください。</p>
+</div>
+<p>
+  今の状態はターミナルからも確認できます。
+</p>
+<pre><code>ioreg -n IOPMrootDomain -r -d 1 | grep SleepDisabled</code></pre>
+
+<h2>アンインストール</h2>
+<ol>
+  <li>メニューバーのアイコンが<strong>斜線なしの状態</strong>になっていることを確認する（スリープ設定を元に戻す）</li>
+  <li>右クリック →「終了」</li>
+  <li><code>/Applications/SleepGuard.app</code> をゴミ箱へ</li>
+  <li>パスワード不要の設定も消すなら <code>sudo rm /etc/sudoers.d/sleepguard</code></li>
+</ol>
+
+<footer>
+  MIT License · <a href="https://github.com/Hiroki-Soeno/sleepguard">GitHub</a> ·
+  不具合や要望は <a href="https://github.com/Hiroki-Soeno/sleepguard/issues">Issues</a> へ
+</footer>
+
+</div>
+</body>
+</html>
