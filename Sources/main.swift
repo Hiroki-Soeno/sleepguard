@@ -89,6 +89,8 @@ enum Icon {
         // lockFocus で作ったビットマップは alignmentRect を持たないので、
         // 元のSFシンボルのものを引き継ぐ（これが無いとメニューバー上で月が数px下にズレる）
         out.alignmentRect = base.alignmentRect
+        // 説明も同様に落ちる（無いと VoiceOver 等で「status menu」と読まれる）
+        out.accessibilityDescription = base.accessibilityDescription
         out.isTemplate = false
         return out
     }
