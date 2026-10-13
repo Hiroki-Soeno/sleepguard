@@ -75,10 +75,16 @@ sudo bash scripts/uninstall-sudoers.sh   # 取り消し
 ## 仕組み
 
 - 状態の読み取り: IORegistryの `IOPMrootDomain.SleepDisabled` をアプリ内から直読み（2秒ポーリング＋スリープ復帰時＋メニュー展開時に更新）。ターミナルで `sudo pmset` を叩いて変えた場合も追従する。
-- 切り替え: `sudo -n pmset -a disablesleep 0|1`。sudoers未設定なら管理者パスワードのダイアログにフォールバック。
+- 切り替え: `sudo -n pmset -a disablesleep 0|1`。sudoers未設定なら管理者パスワードのダイアログにフォールバック。 **実際の反映は powerd が非同期で行うので、状態が変わるのを最大3秒待ってから成否を判定する** （下の実装メモ）。
 
 ## 実装メモ（ハマりどころ）
 
+- **pmset の終了直後に状態を1回読むと、たまに反映前の値を拾う** ＝「切り替えに失敗しました」が出るのに、アイコンは直後のポーリングで切り替わる、の原因だった。`pmset -a disablesleep` は `IOPMSetSystemPowerSetting` で設定ファイル（`/Library/Preferences/com.apple.PowerManagement.plist` の `SystemPowerSettings`）を書いて `notify_post` するだけで終わり、IORegistry の `SleepDisabled` は **その通知を受けた powerd が `PMActivateSystemPowerSettings` で後から書く** （出典：apple-oss-distributions の `main` ブランチ＝ PowerManagement `pmset/pmset.m` 800〜811行・`pmconfigd/PMSettings.m` 1330〜1347行と1380行、IOKitUser `pwr_mgt.subproj/IOPMEnergyPrefs.c` 1622〜1659行。2026-10-13 時点で取得。手元の macOS 26.7.1 のビルドと同一かは未確認だが、下の実測ログの順序と一致する）。→ `Toggler.waitUntilApplied` で、状態が目標値になるまで50ms刻み・最大3秒待ってから判定する（終了コードが非0＝pmset まで届いていないときは待たない）。
+  - 実測（macOS 26.7.1・AC・2026-10-13）：os_log で同じ時計に並べると、powerd の `Energy Saver Prefs have changed` の1〜2ms後に値が反転し、その0〜1ms後に sudo/pmset が終了する（n=6）＝ **差は数msしかない** 。旧コードの判定（`Toggler.run` が返った直後に main へ1回ホップして1回だけ読む）を再現すると **300回中6回（2%）が反映前の値を読んだ** （固まって出る：200回の回で#141〜#155に5回）。修正後の `Toggler.set` は200回で不一致0（うち7回が待ちに入った・最長0.10秒）。`result.ok` の条件を足した最終版でも60回で再確認・不一致0。
+  - 実害の記録：2026-10-13 18:28:29 のクリックは、unified log 上アラートの経路を通ったと推定している（根拠＝完了時の描画ログが1回だけで、続いて iconservices・RunningBoard のアクティベーション系ログ、1.7秒後にボタンの mouseUp、その直後に描画。アラートを閉じたときの `defer` の描画と並びが一致する）。ただし **この回に powerd が何ms遅れたかはログの粒度では復元できない** 。
+  - ⚠️ **計測の落とし穴** ：最初は別スレッドで `Process.waitUntilExit()` の戻りを終了時刻にしたので「pmset の終了は反転の10〜50ms後」に見え、余裕があると誤認した。`isRunning` を0.5ms間隔で見ると差は0〜1ms。 **どちらの測り方で数字が変わったかは分かったが、遅れの原因（`waitUntilExit` 自体かスレッドのスケジューリングか）は切り分けていない** 。
+  - pmset は書き込みに失敗しても `failed to set the value.` を出して処理を続け、最後は `return 0`（pmset.m 809行・922行）。成否は終了コードではなく状態で見る。
+  - unified log の `pmset` 起動のうち、直前に `sudo` の `Reading config` が無いものは他ツールの読み取り（`pmset -g` 等）で、SleepGuard の切り替えではない。調査時に「powerd が通知を受けていない回がある」と一度誤認した。
 - **アイコンを自前で描くと `alignmentRect` が落ちてメニューバー上で位置がズレる** 。`lockFocus` で作ったビットマップは元のSFシンボルが持つ `alignmentRect` を引き継がないので、月が **実測4px（2pt）下にズレていた（`SymbolConfiguration` を揃えた後の値＝この4pxは `alignmentRect` 単独の効果）** 。`out.alignmentRect = base.alignmentRect` で解消（実測：斜線がかからない左3/5/7列の上端が 32/30/29 → 32/30/29 で一致）。あわせて2状態で **同じ `SymbolConfiguration`** を使う（`.semibold` と `.regular` を混ぜると 17×19pt と 16×18pt になって1ptズレる）。
 - **`sudo -n -l <cmd>` は「パスワード不要か」の判定には向かない** 。`man sudoers` の `listpw` 既定値は `any` ＝ NOPASSWD 行が1つでもあれば `sudo -l` 自体がパスワード無しで通るので、 **別の用途で入れた NOPASSWD 行があると誤判定する** 。`/etc/sudoers.d/sleepguard-<ユーザー名>` の有無で判定する方が単純で確実。
   - ⚠️ **訂正の記録** ：当初これを「管理者は元々そのコマンドを実行してよいので常に exit 0 を返す＝初回の提案ダイアログが出なかった原因」と書いたが **間違い** 。`sudo -n -l pmset…` が exit 0 を返した測定は **sudoersファイルが出来た後（17:53）** に取ったもので、ファイル作成前の挙動ではない。ファイルのmtimeは17:51＝ **提案ダイアログは最初からちゃんと出ていて、それを承認した結果** 。「画面にダイアログが見えない」→「判定バグに違いない」と決め打ちして、 **測定した時刻と因果の順序を確かめなかった** のが誤りの原因。
