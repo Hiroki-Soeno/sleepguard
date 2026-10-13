@@ -91,6 +91,7 @@ sudo bash scripts/uninstall-sudoers.sh   # 取り消し
 - **LSUIElementのアプリはダイアログが裏に隠れうる** 。モーダルの間だけ `setActivationPolicy(.regular)` に切り替えるようにしてある（ただし ⚠️ **上記のとおり「隠れていた」事実は観測できていない** ＝予防的な対処）。
 - **`osascript` の終了コードは成功0／失敗は全部1に潰れる** 。内側のシェルの終了コード（3でも127でも）もユーザーのキャンセル（-128）も区別できない。→ キャンセル判定は stderr の `(-128)` を見る、インストール成否は `/etc/sudoers.d/sleepguard-<ユーザー名>` が出来たかで見る。実測：`osascript -e 'error number -128'` → stderr `... (-128)` / exit 1、`osascript -e 'do shell script "exit 3"'` → stderr `... (3)` / exit 1。
 - **`Timer.scheduledTimer` は `.default` モードにしか入らない** ＝メニューを開いている間・モーダル表示中は止まる。`RunLoop.main.add(timer, forMode: .common)` で登録し直している。
+- **`SMAppService.mainApp.status` は呼ぶたびにXPCで問い合わせ、unified log に1行出す** 。1.0では2秒ごとの `render()` で読んでいたので、起きている間ずっと1時間約1800行のログを出していた（実測：2026-10-13 は21時までで19,875行。`log show` で `SMAppService` を含む SleepGuard の行を日別に数えた）。チェックマークが見えるのはメニューを開いたときだけなので、`menuWillOpen` で読むようにした。
 - 見た目の確認用に `SLEEPGUARD_FAKE=1` を環境変数で渡すと、実際の設定を変えずにスリープ無効時のアイコンを表示できる。
 
 ## 配布について

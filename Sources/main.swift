@@ -249,6 +249,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         recheckSudoers()
         refresh()
+        // ⚠️ SMAppService.status は呼ぶたびにXPC往復＋ログ1行なので、2秒ごとの render() には入れない
+        // （入れていたら起きている間ずっと1時間約1800行のログになっていた）。見えるのはメニューを開いたときだけなのでここで読む
+        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
     }
 
     private func recheckSudoers() {
@@ -305,7 +308,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         toggleItem.title = busy ? "切り替え中…" : (disabled ? "スリープを有効に戻す" : "スリープを無効にする")
         toggleItem.isEnabled = !busy
         labelItem.state = showLabel ? .on : .off
-        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         sudoersItem.title = sudoersReady ? "パスワード不要：設定済み ✓" : "パスワード不要にする…"
         sudoersItem.isEnabled = !sudoersReady
         removeSudoersItem.isHidden = !sudoersReady
