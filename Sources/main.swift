@@ -106,18 +106,31 @@ enum Toggler {
         var userCanceled: Bool { stderr.contains("-128") }
     }
 
-    /// sudoers が入っていれば無音で、無ければ管理者パスワードのダイアログで切り替える
+    /// sudoers が入っていれば無音で、無ければ管理者パスワードのダイアログで切り替える。
+    /// completion は **状態が反映されるまで待ってから** 呼ぶ（理由は waitUntilApplied）
     static func set(_ disabled: Bool, completion: @escaping (_ result: Result) -> Void) {
         let value = disabled ? "1" : "0"
         DispatchQueue.global(qos: .userInitiated).async {
-            let quiet = run("/usr/bin/sudo", ["-n", "/usr/bin/pmset", "-a", "disablesleep", value])
-            if quiet.ok {
-                DispatchQueue.main.async { completion(quiet) }
-                return
+            var result = run("/usr/bin/sudo", ["-n", "/usr/bin/pmset", "-a", "disablesleep", value])
+            if !result.ok {
+                let script = "do shell script \"/usr/bin/pmset -a disablesleep \(value)\" with administrator privileges"
+                result = run("/usr/bin/osascript", ["-e", script])
             }
-            let script = "do shell script \"/usr/bin/pmset -a disablesleep \(value)\" with administrator privileges"
-            let result = run("/usr/bin/osascript", ["-e", script])
+            // 終了コード非0＝pmset まで届いていない（キャンセル含む）ので待たずに返す
+            if result.ok { waitUntilApplied(disabled) }
             DispatchQueue.main.async { completion(result) }
+        }
+    }
+
+    /// ⚠️ pmset は設定ファイルを書いて powerd に通知するだけで終わる。IORegistry の SleepDisabled は
+    /// **powerd が後から非同期に書く** ので、pmset の終了直後に1回読むだけだと反映前の値を拾って
+    /// 「失敗」と誤判定する（その後の2秒ポーリングでアイコンだけ切り替わる）。反映を見届けるまで待つ。
+    /// pmset は書き込みに失敗しても終了コード0なので、成否はここで読む状態だけで判断する。
+    /// SLEEPGUARD_FAKE 中は状態が固定なので timeout まで待ってから失敗扱いになる（見た目確認用なので許容）
+    static func waitUntilApplied(_ target: Bool, timeout: TimeInterval = 3.0) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while PMState.sleepDisabled() != target && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
         }
     }
 
